@@ -1,0 +1,189 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=7,IE=9" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.0/js/dojo/dijit/themes/claro/claro.css">
+    <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/3.0/"></script>
+    <script type="text/javascript" language="Javascript">
+      dojo.require("esri.map");
+      dojo.require("esri.tasks.PrintTask");
+      dojo.require("dijit.form.Button");
+      dojo.require("dijit.form.CheckBox");
+      dojo.require("dijit.form.ComboBox");
+
+      var layer, map, visible = [];
+      var printTask, params;
+
+      function init() {
+        var startExtent = new esri.geometry.Extent({
+          "xmin" : 12508732.48185681,
+          "ymin" : 2568812.215704776,
+          "xmax" : 12978361.583640708,
+          "ymax" : 2774580.6958483714,
+          "spatialReference" : {
+            "wkid" : 102100
+          }
+        });
+        map = new esri.Map("map", {
+          extent : startExtent
+        });
+
+        var dynUrl = "http://localhost:6080/arcgis/rest/services/printService/ConterminousUSA/MapServer";
+        layer = new esri.layers.ArcGISDynamicMapServiceLayer(dynUrl, {
+          "id" : "ConterminousUSA"
+        });
+
+        if (layer.loaded) {
+          buildLayerList(layer);
+        } else {
+          dojo.connect(layer, "onLoad", buildLayerList);
+        }
+
+        var printUrl = "http://localhost:6080/arcgis/rest/services/printService/AdvancedHighQualityPrinting/GPServer/AdvancedHighQualityPrinting";
+        printTask = new esri.tasks.PrintTask(printUrl, {
+          async : true
+        });
+        params = new esri.tasks.PrintParameters();
+        params.map = map;
+      }
+
+      function buildLayerList(layer) {
+        var items = dojo.map(layer.layerInfos, function(info, index) {
+          if (info.defaultVisibility) {
+            visible.push(info.id);
+          }
+          return "<input type='checkbox' class='list_item' checked='" + (info.defaultVisibility ? "checked" : "") + "' id='" + info.id + "' onclick='updateLayerVisibility();' /><label for='" + info.id + "'>" + info.name + "</label>";
+        });
+
+        dojo.byId("layer_list").innerHTML = items.join();
+
+        layer.setVisibleLayers(visible);
+        map.addLayer(layer);
+
+      }
+
+      function updateLayerVisibility() {
+        var inputs = dojo.query(".list_item"), input;
+
+        visible = [];
+
+        dojo.forEach(inputs, function(input) {
+          if (input.checked) {
+            visible.push(input.id);
+          }
+        });
+        //if there aren't any layers visible set the array to be -1
+        if (visible.length === 0) {
+          visible.push(-1);
+        }
+        layer.setVisibleLayers(visible);
+      }
+
+      function print() {
+        var layout = dojo.byId("layout");
+        var index = layout.selectedIndex;
+        var selectedValue_layout = layout.options[index].value;
+        var format = dojo.byId("format");
+        var index = format.selectedIndex;
+        var selectedValue_format = format.options[index].value;
+        var georef_info = dojo.byId("georef_info");
+        var index = georef_info.selectedIndex;
+        var selectedValue_georef_info = georef_info.options[index].value;
+
+        var legendLayer = new esri.tasks.LegendLayer();
+        legendLayer.layerId = "ConterminousUSA";
+        legendLayer.subLayerIds = [];
+        if (CapitalCities.checked == true) {
+          legendLayer.subLayerIds.push(0);
+        }
+        if (InterstateHighways.checked == true) {
+          legendLayer.subLayerIds.push(1);
+        }
+        if (Rivers.checked == true) {
+          legendLayer.subLayerIds.push(2);
+        }
+        if (Lakes.checked == true) {
+          legendLayer.subLayerIds.push(3);
+        }
+        if (StateBoundaries.checked == true) {
+          legendLayer.subLayerIds.push(4);
+        }
+
+        params.template = {
+          layout : selectedValue_layout,
+          format : selectedValue_format,
+          layoutOptions : {
+            legendLayers : [legendLayer]
+          }
+        };
+        params.extraParameters = {
+          Georef_info : selectedValue_georef_info
+        };
+        printTask.execute(params, printComplete);
+      }
+
+      function printComplete(result) {
+        window.open(result.url);
+      }
+      dojo.addOnLoad(init);
+
+    </script>
+
+  </head>
+
+  <body class="claro">
+    <div id="map" style="width:1000px; height:600px; border:1px solid #000;"></div>
+    <br />
+    Layout Template:
+    <select id="layout" >
+      <OPTION value="CentralUSA">CentralUSA</OPTION>
+      <OPTION value="ConterminuousUSA">ConterminuousUSA</OPTION>
+      <OPTION value="NortheasternUSA">NortheasternUSA</OPTION>
+      <OPTION value="NorthwesternUSA">NorthwesternUSA</OPTION>
+      <OPTION value="SouthernUSA">SouthernUSA</OPTION>
+      <OPTION value="SouthwesternUSA">SouthwesternUSA</OPTION>
+       <OPTION value="Landscape_03_A3_1">Landscape_03_A3_1</OPTION>
+
+    </select>
+    &nbsp;&nbsp;Format:
+    <select id="format">
+      <OPTION value="PDF">PDF</OPTION>
+      <OPTION value="PNG">PNG</OPTION>
+    </select>
+
+    &nbsp;&nbsp;Include Georef info?
+    <select id="georef_info">
+      <OPTION value="True">True</OPTION>
+      <OPTION value="False">False</OPTION>
+    </select>
+    <br />
+    <br />
+    Table of Contents:
+    <br />
+    <span id="layer_list"></span>
+    <br />
+    <br />
+    Include in Legend:
+    <br />
+    <label>
+      <input type="checkbox" name="CapitalCities" id="CapitalCities" checked="checked">
+      Capital Cities</label>
+    <label>
+      <input type="checkbox" name="InterstateHighways" id="InterstateHighways" checked="checked">
+      Interstate Highways</label>
+    <label>
+      <input type="checkbox" name="Rivers" id="Rivers" checked="checked">
+      Rivers</label>
+    <label>
+      <input type="checkbox" name="Lakes" id="Lakes" checked="checked">
+      Lakes</label>
+    <label>
+      <input type="checkbox" name="StateBoundaries" id="StateBoundaries" checked="checked">
+      State Boundaries</label>
+    <br />
+    <br />
+    <input type="button" id="print" value="Print" onclick="print();"/>
+  </body>
+</html>

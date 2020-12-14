@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <title>Webmap Printing</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="X-UA-Compatible"/>
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.0/js/dojo/dijit/themes/claro/claro.css">
+    <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=3.0"></script>
+    <script type="text/javascript" language="Javascript">
+      dojo.require("esri.map");
+      dojo.require("esri.tasks.PrintTask");
+      var printTask, params;
+
+      function init() {
+        // set the extent of the web app to same extent as the template map document
+        var startExtent = new esri.geometry.Extent({
+          "xmin" : -13043333,
+          "ymin" : 3836078,
+          "xmax" : -13030585,
+          "ymax" : 3853683,
+          "spatialReference" : {
+            "wkid" : 102100
+          }
+        });
+
+        var map = new esri.Map("map", {
+          extent : startExtent
+        });
+
+        // add tiled map service to webmap
+        var tiledUrl = "http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer";
+        var tiledLayer = new esri.layers.ArcGISTiledMapServiceLayer(tiledUrl);
+        map.addLayer(tiledLayer);
+        var printUrl = "http://localhost:6080/arcgis/rest/services/printService/BasicTutorial/GPServer/BasicTutorial";
+        printTask = new esri.tasks.PrintTask(printUrl, {
+          async : true
+        });
+        params = new esri.tasks.PrintParameters();
+        params.map = map;
+      }
+
+      function print() {
+        var ptemplate = new esri.tasks.PrintTemplate();
+        // use the extent of the webmap in the output PDF
+        ptemplate.preserveScale = false;
+        params.template = ptemplate;
+        printTask.execute(params, printComplete);
+      }
+
+      function printComplete(result) {
+        window.open(result.url);
+      }
+
+      dojo.addOnLoad(init);
+
+    </script>
+  </head>
+  <body class="claro">
+    <input type="button" id="print" value="Print" onclick="print();"/>
+    <div id="map" style="width:1000px; height:600px; border:1px solid #000;"></div>
+  </body>
+</html>

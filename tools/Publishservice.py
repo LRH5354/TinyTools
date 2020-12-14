@@ -1,19 +1,17 @@
-#coding:cp936
-import os
-
+# coding=utf-8
 import arcpy
 import time
 import sys
-
 import getpass
-__author__ = 'jiangmb'
 from arcpy import mapping
 import xml.dom.minidom as DOM
 import os
 import tempfile
-import argparse
+
+
+
 class CreateSddraft:
-    def CreateSddraft(self,mapDocPath,con,serviceName,copy_data_to_server=True,folder=None):
+    def CreateSddraft(self, mapDocPath, con, serviceName, copy_data_to_server=True, folder=None):
         """
         :param mapDocPath: mxd path
         :param con: arcgis server connection file
@@ -22,26 +20,21 @@ class CreateSddraft:
         :param folder: folder to contain the publishing service
         :return: the file path of the sddraft
         """
-
-        mapDoc=mapping.MapDocument(mapDocPath)
-        sddraft=mapDocPath.replace(".mxd",".sddraft")
-        result= mapping.CreateMapSDDraft(mapDoc, sddraft, serviceName, 'ARCGIS_SERVER', con, copy_data_to_server, folder)
+        mapDoc = mapping.MapDocument(mapDocPath)
+        sddraft = mapDocPath.replace(".mxd", ".sddraft")
+        result = mapping.CreateMapSDDraft(mapDoc, sddraft, serviceName, 'ARCGIS_SERVER', con, copy_data_to_server,folder)
         return sddraft
 
-
-
-    def setTheClusterName(self,xml,clusterName):# the new description
-
+    def setTheClusterName(self, xml, clusterName):  # the new description
         doc = DOM.parse(xml)
         # find the Item Information Description element
-        doc.getElementsByTagName('Cluster')[0].childNodes[0].nodeValue=clusterName
+        doc.getElementsByTagName('Cluster')[0].childNodes[0].nodeValue = clusterName
         # output to a new sddraft
-        outXml =xml
+        outXml = xml
         f = open(outXml, 'w')
-        doc.writexml( f )
+        doc.writexml(f)
         f.close()
-        return  outXml
-
+        return outXml
 
 class CreateContectionFile(object):
     def __init__(self):
@@ -53,17 +46,16 @@ class CreateContectionFile(object):
         """
         wrkspc: store the ags file
         loginDict: dictionary stored login information
-
         """
         # con = 'http://localhost:6080/arcgis/admin'
         try:
-            server_url = "http://{}:{}/arcgis/admin".format(self.__loginDict['server'],self.__loginDict['port'])
-            connection_file_path = str(self.__filePath)            #
+            server_url = "http://{}:{}/arcgis/admin".format(self.__loginDict['server'], self.__loginDict['port'])
+            connection_file_path = str(self.__filePath)  #
             use_arcgis_desktop_staging_folder = False
             if os.path.exists(connection_file_path):
                 os.remove(connection_file_path)
-            out_name = os.path.basename(connection_file_path)
 
+            out_name = os.path.basename(connection_file_path)
             path = os.path.split(self.filePath)[0]
             result = mapping.CreateGISServerConnectionFile("ADMINISTER_GIS_SERVICES",
                                                            path,
@@ -76,13 +68,10 @@ class CreateContectionFile(object):
                                                            self.__loginDict['passWord'],
                                                            "SAVE_USERNAME"
                                                            )
-
-            print "++++++++INFO:Á´½ÓÎÄ¼ş´´½¨³É¹¦++++++++"
-
+            print "++++++++INFO:é“¾æ¥æ–‡ä»¶åˆ›å»ºæˆåŠŸ++++++++"+connection_file_path
             return connection_file_path
         except Exception, msg:
             print msg
-
     #
     @property
     def filePath(self):
@@ -99,202 +88,139 @@ class CreateContectionFile(object):
 
     @loginInfo.setter
     def loginInfo(self, value):
-
         self.__loginDict = value
-
-
-
-
-class CreateSddraft:
-    def CreateSddraft(self,mapDocPath,con,serviceName,copy_data_to_server=True,folder=None):
-
-        """
-        :param mapDocPath: mxd path
-        :param con: arcgis server connection file
-        :param serviceName: service name
-        :param clusterName: cluster name
-        :param folder: folder to contain the publishing service
-        :return: the file path of the sddraft
-        """
-
-        mapDoc=mapping.MapDocument(mapDocPath)
-        sddraft=mapDocPath.replace(".mxd",".sddraft")
-        result= mapping.CreateMapSDDraft(mapDoc, sddraft, serviceName, 'ARCGIS_SERVER', con, copy_data_to_server, folder)
-        return sddraft
-
-
-
-    def setTheClusterName(self,xml,clusterName):# the new description
-
-        doc = DOM.parse(xml)
-        # find the Item Information Description element
-        doc.getElementsByTagName('Cluster')[0].childNodes[0].nodeValue=clusterName
-        # output to a new sddraft
-        outXml =xml
-        f = open(outXml, 'w')
-        doc.writexml( f )
-        f.close()
-        return  outXml
 
 class publishServices:
 
-    def checkfileValidation(self,mxdLists):
-        print "++++++++INFO:¿ªÊ¼¼ì²éÎÄµµµÄÓĞĞ§ĞÔ++++++++"
-        file_to_be_published=[]
+    def checkfileValidation(self, mxdLists):
+        print "++++++++INFO:å¼€å§‹æ£€æŸ¥æ–‡æ¡£çš„æœ‰æ•ˆæ€§++++++++"
+        file_to_be_published = []
         for file in mxdLists:
-            mxd=mapping.MapDocument(file)
-            brknlist=mapping.ListBrokenDataSources(mxd)
-            if not len(brknlist)==0:
-                print "++++++++ERROR:µØÍ¼ÎÄµµ,"+os.path.split(file)[1]+"Ëğ»µ£¬ÎŞ·¨·¢²¼·şÎñ++++++++"
+            mxd = mapping.MapDocument(file)
+            brknlist = mapping.ListBrokenDataSources(mxd)
+            if not len(brknlist) == 0:
+                print "++++++++ERROR:åœ°å›¾æ–‡æ¡£," + os.path.split(file)[1].encode('utf-8')+ "æŸåï¼Œæ— æ³•å‘å¸ƒæœåŠ¡++++++++"
             else:
                 file_to_be_published.append(file)
-        print "++++++++INFO:µØÍ¼ÎÄµµÓĞĞ§ĞÔ¼ì²éÍê±Ï++++++"
+        print "++++++++INFO:åœ°å›¾æ–‡æ¡£æœ‰æ•ˆæ€§æ£€æŸ¥å®Œæ¯•++++++"
         return file_to_be_published
 
-
-    def publishServices(self,mxdLists,con,clusterName='default',copy_data_to_server=True,folder=None):
+    def publishServices(self, mxdLists, con, clusterName='default', copy_data_to_server=True, folder=None):
 
         for file in self.checkfileValidation(mxdLists):
-            ###tmp:
-            serviceslist=[]
-            serviceName=os.path.splitext(os.path.split(file)[1])[0]
 
-            print "++++++++INFO:·şÎñ_"+serviceName+"¿ªÊ¼´´½¨·şÎñ¶¨ÒåÎÄ¼ş++++++++"
-            clsCreateSddraft=CreateSddraft()
-            sddraft=clsCreateSddraft.CreateSddraft(file,con,serviceName,copy_data_to_server,folder)
-            print "++++++++INFO:¿ªÊ¼·ÖÎö·şÎñ:"+serviceName+"++++++++"
+            serviceName = os.path.splitext(os.path.split(file)[1])[0]
+            print "++++++++INFO:æœåŠ¡_" + serviceName.encode('utf-8') + "å¼€å§‹åˆ›å»ºæœåŠ¡å®šä¹‰æ–‡ä»¶++++++++"
+            clsCreateSddraft = CreateSddraft()
+            sddraft = clsCreateSddraft.CreateSddraft(file, con, serviceName, copy_data_to_server, folder)
+            print "++++++++INFO:å¼€å§‹åˆ†ææœåŠ¡:" + serviceName.encode('utf-8') + "++++++++"
             analysis = arcpy.mapping.AnalyzeForSD(sddraft)
-            dirName=os.path.split(file)[0]
+            dirName = os.path.split(file)[0]
             if analysis['errors'] == {}:
-               print "++++++++WARNING:²»´æÔÚ´íÎó£¬µ«ÊÇÓĞÈçÏÂÌáÊ¾ĞÅÏ¢¡£ÕâĞ©ÄÚÈİ¿ÉÄÜ»áÓ°Ïì·şÎñĞÔÄÜ+++++++"
-               print analysis['warnings']
-               if(not self.checkWarnings(analysis['warnings'])):
-                   try:
-                        sd=dirName+"\\"+serviceName+".sd"
-                        if(os.path.exists(sd)):
+                print "++++++++WARNING:ä¸å­˜åœ¨é”™è¯¯ï¼Œä½†æ˜¯æœ‰å¦‚ä¸‹æç¤ºä¿¡æ¯ã€‚è¿™äº›å†…å®¹å¯èƒ½ä¼šå½±å“æœåŠ¡æ€§èƒ½+++++++"
+                print analysis['warnings']
+                if (not self.checkWarnings(analysis['warnings'])):
+                    try:
+                        sd = dirName + "\\" + serviceName + ".sd"
+                        if (os.path.exists(sd)):
                             os.remove(sd)
                         arcpy.StageService_server(sddraft, sd)
-                        print "++++++++INFO:·şÎñ:"+serviceName+"´ò°ü³É¹¦+++++++"
-                        arcpy.UploadServiceDefinition_server(sd, con,in_cluster=clusterName)
-                        print "++++++++INFO:·şÎñ:"+str(serviceName)+"·¢²¼³É¹¦++++++"
+                        print "++++++++INFO:æœåŠ¡:" + serviceName.encode('utf-8') + "æ‰“åŒ…æˆåŠŸ+++++++"
+                        arcpy.UploadServiceDefinition_server(sd, con, in_cluster=clusterName)
+                        print "++++++++INFO:æœåŠ¡:" + str(serviceName) + "å‘å¸ƒæˆåŠŸ++++++"
                         os.remove(sd)
-                        ####Í£Ö¹·şÎñ
+                        ####åœæ­¢æœåŠ¡
 
-
-                   except Exception,msg:
+                    except Exception, msg:
                         print msg
-               else:
-                   print "++++++++WARNING:Ç¿ÁÒ½¨Òé£¬ÍË³öµ±Ç°³ÌĞò£¬È¥×¢²áÊı¾İÔ´¡£Èç²»ÍË³ö£¬6sºó·¢²¼·şÎñ¼ÌĞø+++"
-                   # time.sleep(10)
-                   try:
-                    sd=dirName+"\\"+serviceName+".sd"
-                    if(os.path.exists(sd)):
+                else:
+                    print "++++++++WARNING:å¼ºçƒˆå»ºè®®ï¼Œé€€å‡ºå½“å‰ç¨‹åºï¼Œå»æ³¨å†Œæ•°æ®æºã€‚å¦‚ä¸é€€å‡ºï¼Œ6såå‘å¸ƒæœåŠ¡ç»§ç»­+++"
+                    try:
+                        sd = dirName + "\\" + serviceName + ".sd"
+                        if (os.path.exists(sd)):
+                            os.remove(sd)
+                        arcpy.StageService_server(sddraft, sd)
+                        print "++++++++INFO:æ‰“åŒ…æˆåŠŸ++++++++"
+                        print "æ­£åœ¨æ‰§è¡Œå‘å¸ƒå‡½æ•°"
+                        arcpy.UploadServiceDefinition_server(sd, con, in_cluster=clusterName)
+                        print "++++++++INFO:" + serviceName.encode('utf-8') + "å‘å¸ƒæˆåŠŸ+++++++"
                         os.remove(sd)
-                    arcpy.StageService_server(sddraft, sd)
-                    print "++++++++INFO:´ò°ü³É¹¦++++++++"
-                    arcpy.UploadServiceDefinition_server(sd, con,in_cluster=clusterName)
-                    print "++++++++INFO:"+serviceName+"·¢²¼³É¹¦+++++++"
-                    os.remove(sd)
-                   except Exception,msg:
-                    print msg
-
+                    except Exception, msg:
+                        print msg
             else:
-                print '++++++++ERROR:´æÔÚÈçÏÂ´íÎó:'+analysis['errors']+'++++++++'
-
-                #ÎåÃëºóÍË³ö¿ØÖÆÌ¨
+                print '++++++++ERROR:å­˜åœ¨å¦‚ä¸‹é”™è¯¯:' + analysis['errors'].encode('utf-8') + '++++++++';
+                print '5ç§’åæ‰§è¡Œä¸‹ä¸€ä¸ªä»»åŠ¡'
+                # äº”ç§’åé€€å‡ºæ§åˆ¶å°
                 time.sleep(5)
-                sys.exit(1)
+                # sys.exit(1)
 
-
-    def  checkWarnings(self,warnings):
+    def checkWarnings(self, warnings):
         for warning in warnings:
-            if warning[1]==24011:
-                print "++++++++µ±Ç°Êı¾İÎ»ÖÃÃ»ÓĞ×¢²á£¬Êı¾İ»á¿½±´µ½·şÎñÆ÷ÉÏ,¿½±´¹ı³Ì»áÓ°Ïì·¢²¼ËÙ¶È+++++++"
+            if warning[1] == 24011:
+                print "++++++++å½“å‰æ•°æ®ä½ç½®æ²¡æœ‰æ³¨å†Œï¼Œæ•°æ®ä¼šæ‹·è´åˆ°æœåŠ¡å™¨ä¸Š,æ‹·è´è¿‡ç¨‹ä¼šå½±å“å‘å¸ƒé€Ÿåº¦+++++++"
                 return True
         return False
 
-    def GetMxFileList(self,filePath):
-            #ÅĞ¶ÏÎÄ¼ş¼ĞÊÇ·ñ´æÔÚ
+    def GetMxFileList(self, filePath):
+        # åˆ¤æ–­æ–‡ä»¶å¤¹æ˜¯å¦å­˜åœ¨
         if not os.path.exists(filePath):
-            print "++++++++ERROR:ÎÄ¼ş¼Ğ²»´æÔÚ+++++++"
+            print "++++++++ERROR:æ–‡ä»¶å¤¹["+filePath+"]ä¸å­˜åœ¨+++++++"
             sys.exit(1)
-        #»ñÈ¡ÎÄ¼ş¼ĞÖĞµÄËùÓĞmxdÎÄ¼ş
-        list=[]
-        for root,dirname, files in os.walk(filePath):
+        # è·å–æ–‡ä»¶å¤¹ä¸­çš„æ‰€æœ‰mxdæ–‡ä»¶
+        list = []
+        for root, dirname, files in os.walk(filePath):
 
-                 for file in files:
+            for file in files:
+                u_file=file
+                if os.path.splitext(u_file)[1] == '.mxd':
+                    mxdfile = os.path.join(root, u_file)
+                    list.append(mxdfile)
 
-                    if os.path.splitext(file)[1]=='.mxd':
-                        mxdfile=os.path.join(root,file)
-
-                        list.append(mxdfile)
-
-        if list==[]:
-          print "++++++++INFO:ÔÚµ±Ç°Ä¿Â¼ÏÂ²»´æÔÚÓĞĞ§µÄmxdÎÄ¼ş++++++++"
-          time.sleep(5)
-          sys.exit(1)
+        if list == []:
+            print "++++++++INFO:åœ¨å½“å‰ç›®å½•ä¸‹ä¸å­˜åœ¨æœ‰æ•ˆçš„mxdæ–‡ä»¶++++++++"
+            time.sleep(5)
+            sys.exit(1)
         return list
+
 def GetInfo():
+    # server = raw_input("è¯·è¾“å…¥GIS Server IP:")
+    # userName = raw_input("è¯·è¾“å…¥ç«™ç‚¹ç®¡ç†å‘˜ç”¨æˆ·å:")
+    # passWord = getpass.getpass("è¯·è¾“å…¥ç«™ç‚¹ç®¡ç†å‘˜å¯†ç :")
+    # port = raw_input("è¯·è¾“å…¥ç«¯å£å·(6080)ï¼š")
 
-    server = raw_input("ÇëÊäÈëGIS Server IP:")
-    userName=raw_input("ÇëÊäÈëÕ¾µã¹ÜÀíÔ±ÓÃ»§Ãû:")
-    passWord=getpass.getpass("ÇëÊäÈëÕ¾µã¹ÜÀíÔ±ÃÜÂë:")
-    port=raw_input("ÇëÊäÈë¶Ë¿ÚºÅ(6080)£º")
+    logDict = {'server': "127.0.0.1",
+               'userName': "gdmap",
+               'passWord': "gdmap",
+               'port': "6080"}
 
-    logDict={'server':server,
-            'userName':userName,
-                 'passWord':passWord,
-             'port':port}
+    contionfile = os.path.join(tempfile.mkdtemp(), 'server.ags')
 
-    contionfile=os.path.join(tempfile.mkdtemp(),'server.ags')
-
-    #µ÷ÓÃ´´½¨Á´½ÓÎÄ¼şµÄ²ÎÊı
-    instace=CreateContectionFile()
-    instace.filePath=contionfile
-    instace.loginInfo=logDict
+    # è°ƒç”¨åˆ›å»ºé“¾æ¥æ–‡ä»¶çš„å‚æ•°
+    instace = CreateContectionFile()
+    instace.filePath = contionfile
+    instace.loginInfo = logDict
     instace.CreateContectionFile()
-    if(os.path.isfile(contionfile)==False):
-        print "++++++++ERROR:´´½¨Á´½ÓÊ§°Ü++++++++"
+    if (os.path.isfile(contionfile) == False):
+        print "++++++++ERROR:åˆ›å»ºé“¾æ¥å¤±è´¥++++++++"
         time.sleep(5)
         sys.exit(1)
 
-    #ÊäÈëmxdÎÄ¼şµÄÎÄ¼ş¼Ğe
-    mxdDir=raw_input('ÇëÊäÈëmxdËùÔÚÎÄ¼ş¼Ğ:')
-    clsPublishservice=publishServices()
-    fileList=clsPublishservice.GetMxFileList(mxdDir)
+    # è¾“å…¥mxdæ–‡ä»¶çš„æ–‡ä»¶å¤¹e
+    # mxdDir = raw_input('è¯·è¾“å…¥mxdæ‰€åœ¨æ–‡ä»¶å¤¹:')
+    mxdDir=u"E:\mxdfille"
+    clsPublishservice = publishServices()
+    fileList = clsPublishservice.GetMxFileList(mxdDir)
 
-    servic_dir=raw_input("ÇëÖ¸¶¨·¢²¼µ½·şÎñÆ÷Ä¿Â¼£¬Ä¬ÈÏÎªroot¡£Ê¹ÓÃÄ¬ÈÏÖµÖ±½Ó»Ø³µ:")
-    if len(servic_dir)==0:
-        servic_dir==None
-    clusterName=raw_input("ÇëÖ¸¶¨·¢²¼µ½¼¯Èº£¬Ä¬ÈÏÎªcluster¡£ÈçÃ»ÓĞ¼¯Èº»·¾³£¬ÇëÖ±½Ó»Ø³µ:")
-    if len(clusterName)==0:
-        clusterName='default'
-    clsPublishservice=publishServices()
-    clsPublishservice.publishServices(fileList,contionfile,clusterName,copy_data_to_server=False,folder=servic_dir)
+    servic_dir = raw_input("è¯·æŒ‡å®šå‘å¸ƒåˆ°æœåŠ¡å™¨ç›®å½•ï¼Œé»˜è®¤ä¸ºrootã€‚ä½¿ç”¨é»˜è®¤å€¼ç›´æ¥å›è½¦:")
+    if len(servic_dir) == 0:
+        servic_dir = "autoUP"
+    clusterName = raw_input("è¯·æŒ‡å®šå‘å¸ƒåˆ°é›†ç¾¤ï¼Œé»˜è®¤ä¸ºclusterã€‚å¦‚æ²¡æœ‰é›†ç¾¤ç¯å¢ƒï¼Œè¯·ç›´æ¥å›è½¦:")
+    if len(clusterName) == 0:
+        clusterName = 'default'
+    clsPublishservice = publishServices()
+    clsPublishservice.publishServices(fileList, contionfile, clusterName, copy_data_to_server=True, folder=servic_dir)
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
+
     GetInfo()
-
-    """logDict = {'server': 'localhost',
-               'userName': "arcgis",
-               'passWord': "Super123",
-               'port':'6080'}
-    dd = CreateContectionFile()
-    dd.loginInfo = logDict
-    path =os.path.join(tempfile.mkdtemp(),'server.ags')
-    print path
-    dd.filePath = path
-
-    dd.CreateContectionFile()
-    clsPublishservice=publishServices()
-    #get
-    file=r"d:\workspace\New folder\10"
-    fileList=clsPublishservice.GetMxFileList(file)
-
-
-    clusterName='default'
-    servic_dir=''
-
-    clsPublishservice.publishServices(fileList,path,clusterName,copy_data_to_server=False,folder=servic_dir)
-"""
