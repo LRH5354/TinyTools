@@ -13,7 +13,7 @@ import datetime
 import time
 
 # ==== 设定抢购时间 （修改此处，指定抢购时间点）====
-BUY_TIME = "2020-12-15 19:31:30"
+BUY_TIME = "2020-12-14 17:33:30"
 
 # ====  标识登录状态、重试次数 ====
 MAX_LOGIN_RETRY_TIMES = 6
