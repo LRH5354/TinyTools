@@ -97,7 +97,6 @@ def chooseAll():
     # 点击购物车里全选按钮
     if driver.find_element_by_id("J_SelectAll1"):
         while True:
-            input_ele = driver.find_element_by_id("J_SelectAllCbx1")
             select_all_tag = driver.find_element_by_id("J_SelectAll1")
             if select_all_tag.is_enabled():
                 select_all_tag.click()
