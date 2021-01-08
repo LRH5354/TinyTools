@@ -13,17 +13,17 @@ import datetime
 import time
 
 # ==== 设定抢购时间 （修改此处，指定抢购时间点）====
-BUY_TIME = "2020-12-14 17:33:30"
-
+BUY_TIME = "2021-01-08 11:29:00"
+END_TIME = "2021-01-09 17:00:00"
 # ====  标识登录状态、重试次数 ====
 MAX_LOGIN_RETRY_TIMES = 6
 
 current_retry_login_times = 0
 login_success = False
 buy_time_object = datetime.datetime.strptime(BUY_TIME, '%Y-%m-%d %H:%M:%S')
-
+end_time_object = datetime.datetime.strptime(END_TIME,'%Y-%m-%d %H:%M:%S')
 now_time = datetime.datetime.now()
-if now_time > buy_time_object:
+if now_time > end_time_object:
     print("当前已过抢购时间，请确认抢购时间是否填错...")
     exit(0)
 
@@ -93,17 +93,29 @@ def keep_login_and_wait():
             print("抢购时间点将近，停止自动刷新，准备进入抢购阶段...")
             break
 
-
+def chooseAll():
+    # 点击购物车里全选按钮
+    if driver.find_element_by_id("J_SelectAll1"):
+        while True:
+            input_ele = driver.find_element_by_id("J_SelectAllCbx1")
+            select_all_tag = driver.find_element_by_id("J_SelectAll1")
+            if select_all_tag.is_enabled():
+                select_all_tag.click()
+                if "selected" in select_all_tag.get_attribute("class"):
+                    print("已经选中购物车中全部商品 ...")
+                    break
+                else:
+                    print("选中购物车失败 ！！！,重新开始点击全选按钮")
+            else:
+                driver.refresh()
+    else:
+        print("该全选元素不存在！！！！")
 def buy():
     # 打开购物车
     driver.get("https://cart.taobao.com/cart.htm")
     time.sleep(1)
-
-    # 点击购物车里全选按钮
-    if driver.find_element_by_id("J_SelectAll1"):
-        driver.find_element_by_id("J_SelectAll1").click()
-        print("已经选中购物车中全部商品 ...")
-
+    # 全选宝贝
+    chooseAll()
     submit_succ = False
     retry_submit_times = 0
     while True:
